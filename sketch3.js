@@ -4,11 +4,11 @@
 // * Dynamic polar grid  ⟷  Classic 200-px grid (checkbox in header)
 // ---------------------------------------------------------------------------
 
-const CANVAS_W = 1200;
-const CANVAS_H = 900;
+const CANVAS_W = 600;
+const CANVAS_H = 400;
 const TWO_PI   = Math.PI * 2;
 
-let gridBottomY = 0;
+let gridBottomY = 150;
 
 /*──────── general state ────────*/
 let rho = 100, phi = 0;
@@ -50,9 +50,15 @@ let refPts = [];
 let truePts = [], userPts = [];
 const linePlotH = 150;
 
+const ORIGIN_X = CANVAS_W / 2;
+const ORIGIN_Y = CANVAS_H / 2 + 60;
+const UNIT_PX = 1; // 1 unit = 1 px (default)
+
+
+
 /*──────── setup ────────*/
 function setup () {
-    createCanvas(CANVAS_W, CANVAS_H + linePlotH + 130);
+    createCanvas(CANVAS_W, CANVAS_H + linePlotH + 100);
 
     buildExerciseDrawer();
     buildHeaderBar();
@@ -61,7 +67,13 @@ function setup () {
     angleMode(RADIANS);
     textFont('Georgia');
 
-    target = createVector(random(width), random(height));
+    const r = random(50, 200);       // radius from center
+    const a = random(TWO_PI);        // angle
+    target = createVector(
+        ORIGIN_X + r * cos(a),
+        ORIGIN_Y - r * sin(a)
+    );
+
 }
 
 /*════════ DRAW LOOP ════════*/
@@ -78,10 +90,10 @@ function draw () {
         fill(255); textAlign(CENTER, CENTER);
 
         textSize(28);
-        text(countdownMsg, width / 2, height / 2 - 40);
+        text(countdownMsg, ORIGIN_X, ORIGIN_Y - 40);
 
         textSize(64);
-        text(countdown > 0 ? countdown : 'Go!', width / 2, height / 2 + 20);
+        text(countdown > 0 ? countdown : 'Go!', ORIGIN_X, ORIGIN_Y + 20);
 
         if (countdown === 0) {
             phiCurr = phiFrom;
@@ -104,20 +116,20 @@ function draw () {
     /* current point */
     phi = (phi + TWO_PI) % TWO_PI;
     const cartX = rho * cos(phi), cartY = rho * sin(phi);
-    const x = width/2 + cartX,    y = height/2 - cartY;
+    const x = ORIGIN_X + cartX,    y = ORIGIN_Y - cartY;
 
     drawPolarGrid();
     if (mode === MODE_EXERCISE) drawPolarPaths();
     drawAngleArc(phi);
 
-    stroke(180,100,255); line(width/2, height/2, x, y);
+    stroke(180,100,255); line(ORIGIN_X, ORIGIN_Y, x, y);
 
     stroke(255); strokeWeight(2);
     fill(128,0,128); textSize(14); textAlign(CENTER);
-    text(`ρ = ${rho.toFixed(2)}`, (width/2+x)/2, (height/2+y)/2);
+    text(`ρ = ${rho.toFixed(2)}`, (ORIGIN_X+x)/2, (ORIGIN_Y+y)/2);
     noStroke();
 
-    fill(255); ellipse(width/2,height/2,10);
+    fill(255); ellipse(ORIGIN_X,ORIGIN_Y,10);
     fill(0,200,255); ellipse(x,y,16);
 
     if (mode === MODE_TARGET) drawTargetExtras(x,y);
@@ -208,7 +220,7 @@ function buildGotoControls(){
 function drawTargetExtras(px,py){
     fill(255,50,50); ellipse(target.x,target.y,16);
     fill(200); textSize(12); textAlign(LEFT);
-    text(`x:${(target.x-width/2).toFixed(1)} y:${(height/2-target.y).toFixed(1)}`,
+    text(`x:${(target.x-ORIGIN_X).toFixed(1)} y:${(ORIGIN_Y-target.y).toFixed(1)}`,
         target.x+10,target.y);
     if(dist(px,py,target.x,target.y)<reachThreshold) fireworks(); else sparkle=0;
 }
@@ -311,8 +323,8 @@ function drawPolarPaths () {
         beginShape();
         refPts.forEach(p => {
             if (p.phi <= endPhi) {
-                vertex(width/2 + p.rho * cos(p.phi),
-                    height/2 - p.rho * sin(p.phi));
+                vertex(ORIGIN_X + p.rho * cos(p.phi),
+                    ORIGIN_Y - p.rho * sin(p.phi));
             }
         });
         endShape();
@@ -322,8 +334,8 @@ function drawPolarPaths () {
     if (userPts.length) {
         stroke(0,200,255); noFill(); strokeWeight(2);
         beginShape();
-        userPts.forEach(p => vertex(width/2 + p.rho * cos(p.phi),
-            height/2 - p.rho * sin(p.phi)));
+        userPts.forEach(p => vertex(ORIGIN_X + p.rho * cos(p.phi),
+            ORIGIN_Y - p.rho * sin(p.phi)));
         endShape();
     }
 }
@@ -332,7 +344,7 @@ function drawPolarPaths () {
 /* strip-plot (log switch at 600) */
 function drawLinePlot () {
     push();
-    const topGap = 100;                          // distance below grid
+    const topGap = 120;                          // distance below grid
     translate(0, gridBottomY + topGap);
 
     /* background + axes */
@@ -428,54 +440,82 @@ function showScoreBanner () {
     fill(255); textAlign(CENTER, CENTER);
 
     textSize(24);
-    text(`Accuracy: ${acc}%`, width / 2, 80);
+    text(`Accuracy: ${acc}%`, ORIGIN_X, 80);
 
     textSize(18);
     text(acc >= 80 ? 'Great job 🎉' : 'Try again for better precision.',
-        width / 2, 110);
+        ORIGIN_X, 110);
 }
 
 
-/* Polar grid – classic or dynamic */
-function drawPolarGrid () {
-
-    /* dynamic */
-    let maxR=300;
-    if(mode===MODE_EXERCISE){
-        const all=[...truePts,...userPts].map(p=>p.rho);
-        if(all.length) maxR=max(maxR,max(...all));
+// Adjustments for Polar Grid alignment:
+function drawPolarGrid() {
+    let maxR = 200;
+    if (mode === MODE_EXERCISE) {
+        const all = [...truePts, ...userPts].map(p => p.rho);
+        if (all.length) maxR = max(maxR, max(...all));
     }
-    maxR = ceil(maxR/50)*50 + 50;
-    gridBottomY = height / 2 + min(maxR, 300);        // pixel y-pos of outermost circle
+
+    gridBottomY = ORIGIN_Y + min(maxR, 120); // Ensure consistent placement
+
     stroke(40); noFill();
-    for(let r=50;r<=maxR;r+=50) ellipse(width/2,height/2,r*2);
+    const spacing = 25;
+    for (let i = spacing; i <= maxR; i += spacing) {
+        const radiusInPixels = i; // 1 unit = 1 px
+        ellipse(ORIGIN_X, ORIGIN_Y, radiusInPixels * 2, radiusInPixels * 2);
+    }
+
+
     stroke(80);
-    for(let a=0;a<TWO_PI;a+=PI/6){
-        const gx=width/2+(maxR+20)*cos(a), gy=height/2-(maxR+20)*sin(a);
-        line(width/2,height/2,gx,gy);
+    for (let a = 0; a < TWO_PI; a += PI / 6) {
+        const gx = ORIGIN_X + (maxR + 20) * cos(a);
+        const gy = ORIGIN_Y - (maxR + 20) * sin(a);
+        line(ORIGIN_X, ORIGIN_Y, gx, gy);
+
         fill(200); noStroke(); textAlign(CENTER);
-        text(nf(degrees(a),0,0)+'°',
-            width/2+(maxR+35)*cos(a),
-            height/2-(maxR+35)*sin(a));
+        text(nf(degrees(a), 0, 0) + '°',
+            ORIGIN_X + (maxR + 35) * cos(a),
+            ORIGIN_Y - (maxR + 35) * sin(a));
         stroke(80);
-    } noStroke();
+    }
+    noStroke();
 }
 
-/* Cartesian grid */
-function drawCartesianGrid(){
-    stroke(30,30,60); strokeWeight(1); fill(100); textSize(10); textAlign(CENTER,CENTER);
-    for(let x=0;x<=width;x+=50){ line(x,0,x,height);
-        if(x!==width/2) text(x-width/2,x,height/2+48);}
-    for(let y=0;y<=height;y+=50){ line(0,y,width,y);
-        if(y!==height/2) text(height/2-y,width/2-20,y+38);}
+
+// Cartesian Grid with consistent scaling
+function drawCartesianGrid() {
+    stroke(30, 30, 60);
+    strokeWeight(1);
+    fill(100);
+    textSize(9);
+    textAlign(CENTER, CENTER);
+
+    const spacing = 50;
+    const maxCoord = 500;
+
+    for (let dx = -maxCoord; dx <= maxCoord; dx += spacing) {
+        const x = ORIGIN_X + dx;
+        line(x, 0, x, height);
+        if (dx !== 0) text(dx, x, ORIGIN_Y );     // Ensure label placement
+    }
+
+    for (let dy = -maxCoord; dy <= maxCoord; dy += spacing) {
+        const y = ORIGIN_Y - dy;
+        line(0, y, width, y);
+        if (dy !== 0) text(dy, ORIGIN_X , y);
+    }
 }
+
+
+
+
 function drawAngleArc(a){
     noFill(); stroke(255,100,0); strokeWeight(3);
-    arc(width/2,height/2,100,100,-a,0,OPEN);
+    arc(ORIGIN_X,ORIGIN_Y,100,100,-a,0,OPEN);
     stroke(255); strokeWeight(1); fill(255,100,0);
     const mid=-a/2; textAlign(CENTER); textSize(14);
     text(`φ=${degrees(a).toFixed(1)}°`,
-        width/2+55*cos(mid), height/2+55*sin(mid));
+        ORIGIN_X+55*cos(mid), ORIGIN_Y+55*sin(mid));
     noStroke();
 }
 function drawContinueButton(){
@@ -486,7 +526,7 @@ function drawContinueButton(){
 }
 function fireworks(){
     fill(255,255,0); textSize(32); textAlign(CENTER,CENTER);
-    text("Hooora!", width/2, height-50);
+    text("Hooora!", ORIGIN_X, height-50);
     sparkle+=0.5;
     for(let i=0;i<30;i++){
         const a=random(TWO_PI),r=random(20,50);
