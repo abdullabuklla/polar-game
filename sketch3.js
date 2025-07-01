@@ -13,7 +13,7 @@ let gridBottomY = 0;
 /*──────── general state ────────*/
 let rho = 100, phi = 0;
 let continueMove = true;
-let rhoStep;
+let rhoStep= 3;
 let rhoStepInput;
 const keyPhiStep = 0.005;
 
