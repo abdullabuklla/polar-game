@@ -4,8 +4,8 @@
 // * Dynamic polar grid  ⟷  Classic 200-px grid (checkbox in header)
 // ---------------------------------------------------------------------------
 
-const CANVAS_W = 600;
-const CANVAS_H = 400;
+const CANVAS_W = 900;
+const CANVAS_H = 700;
 const TWO_PI   = Math.PI * 2;
 
 let gridBottomY = 150;
@@ -89,10 +89,10 @@ function draw () {
 
         fill(255); textAlign(CENTER, CENTER);
 
-        textSize(28);
+        textSize(30);
         text(countdownMsg, ORIGIN_X, ORIGIN_Y - 40);
 
-        textSize(64);
+        textSize(66);
         text(countdown > 0 ? countdown : 'Go!', ORIGIN_X, ORIGIN_Y + 20);
 
         if (countdown === 0) {
@@ -125,7 +125,7 @@ function draw () {
     stroke(180,100,255); line(ORIGIN_X, ORIGIN_Y, x, y);
 
     stroke(255); strokeWeight(2);
-    fill(128,0,128); textSize(14); textAlign(CENTER);
+    fill(128,0,128); textSize(16); textAlign(CENTER);
     text(`ρ = ${rho.toFixed(2)}`, (ORIGIN_X+x)/2, (ORIGIN_Y+y)/2);
     noStroke();
 
@@ -136,7 +136,7 @@ function draw () {
     if (continueMove) handleKeys();
 
     /* HUD */
-    fill(255); textSize(14); textAlign(LEFT);
+    fill(255); textSize(16); textAlign(LEFT);
     text(`ρ = ${rho.toFixed(2)}`,   10, 60);
     text(`φ = ${(degrees(phi)).toFixed(2)}°`, 10, 80);
     text(`x = ${cartX.toFixed(2)}`, 10,100);
@@ -162,7 +162,9 @@ function buildHeaderBar () {
         .style('z-index','999');
 
     /* mode switch button */
-    const btn = createButton('Switch to Exercise Mode').parent(bar);
+    const btn = createButton('Switch to Exercise Mode')
+        .style('margin', '5px 10px')  // top/bottom 5px, left/right 10px
+        .parent(bar);
     btn.mousePressed(() => {
         if (mode === MODE_TARGET) enterExerciseMode(btn);
         else                      enterTargetMode(btn);
@@ -171,8 +173,10 @@ function buildHeaderBar () {
     /* checkbox for original plot */
     originalChk = createCheckbox('Original plot', false)
         .parent(bar)
-        .style('margin-left','auto')
-        .style('color','#fff')
+        .style('margin-top', '5px')
+        .style('margin-bottom', '5px')
+        .style('margin-right', '10px')   // optional
+        .style('margin-left', 'auto')    // keeps it aligned to the right
         .hide()                                 // start hidden
         .changed(() => { showOriginalPlot = originalChk.checked(); });
 
@@ -198,8 +202,9 @@ function enterTargetMode(btn){
 /*════════ Target-mode UI ════════*/
 function buildGotoControls(){
     gotoPanel=createDiv()
-        .style('display','flex').style('gap','10px')
-        .style('padding','5px')
+        .style('display','flex').style('gap','12px')
+        .style('padding','5px').style('border-radius','6px')
+        .style('width', CANVAS_W-10 + 'px')
         .style('background','#222').style('color','#fff');
     gotoPanel.position(10, height+10);
 
@@ -219,7 +224,7 @@ function buildGotoControls(){
 
 function drawTargetExtras(px,py){
     fill(255,50,50); ellipse(target.x,target.y,16);
-    fill(200); textSize(12); textAlign(LEFT);
+    fill(200); textSize(14); textAlign(LEFT);
     text(`x:${(target.x-ORIGIN_X).toFixed(1)} y:${(ORIGIN_Y-target.y).toFixed(1)}`,
         target.x+10,target.y);
     if(dist(px,py,target.x,target.y)<reachThreshold) fireworks(); else sparkle=0;
@@ -229,23 +234,25 @@ function drawTargetExtras(px,py){
 function buildExerciseDrawer(){
     drawer=createDiv()
         .style('display','none').style('position','absolute')
-        .style('left','10px').style('top', `${height+45}px`)
+        .style('left','7px')
+        .style('top', `${height+10}px`)
+        .style('width', CANVAS_W - 15 + 'px')
         .style('background','#222').style('color','#fff')
-        .style('padding','8px').style('border-radius','6px')
-        .style('gap','6px').style('font-family','Georgia');
+        .style('padding','8px').style('border-radius','10px')
+        .style('gap','5px').style('font-family','Georgia');
 
     drawer.child(createSpan('ρ(φ) = '));
     exprInput = createInput('200*sin(3*phi)').size(180).parent(drawer);
 
-    drawer.child(createSpan(' φ from'));
+    drawer.child(createSpan('   φ from'));
     phiFromInput = createInput('0').size(50).parent(drawer);
     drawer.child(createSpan('° to'));
     phiToInput   = createInput('180').size(50).parent(drawer);
 
-    drawer.child(createSpan(' speed (°/frame):'));
+    drawer.child(createSpan('   speed (°/frame):'));
     speedInput = createInput('0.1').size(50).parent(drawer);
 
-    drawer.child(createSpan('  ρ step:'));
+    drawer.child(createSpan('    ρ step:'));
     rhoStepInput = createInput('3').size(50).parent(drawer);   // declare global below
 
     createButton('Start').parent(drawer).mousePressed(startExercise);
@@ -344,7 +351,7 @@ function drawPolarPaths () {
 /* strip-plot (log switch at 600) */
 function drawLinePlot () {
     push();
-    const topGap = 120;                          // distance below grid
+    const topGap = 250;                          // distance below grid
     translate(0, gridBottomY + topGap);
 
     /* background + axes */
@@ -366,7 +373,7 @@ function drawLinePlot () {
         : r => map(r,                minR,  maxR,                             linePlotH - 20, 10);
 
     /* ─── Y-axis ticks & labels ─── */
-    stroke(120); fill(180); textSize(10); textAlign(RIGHT, CENTER);
+    stroke(120); fill(180); textSize(12); textAlign(RIGHT, CENTER);
     const yTicks = 4;
     for (let i = 0; i <= yTicks; i++) {
         const val = useLog
@@ -389,7 +396,7 @@ function drawLinePlot () {
 
     /* (log indicator) */
     if (useLog) {
-        noStroke(); fill(180); textSize(10); textAlign(LEFT, TOP);
+        noStroke(); fill(180); textSize(12); textAlign(LEFT, TOP);
         text('(log)', 6, 6);
     }
 
@@ -406,12 +413,12 @@ function drawLinePlot () {
     push();
     translate(18, linePlotH / 2);      // left of Y-axis, vertically centred
     rotate(-HALF_PI);                  // rotate text 90° CCW
-    noStroke(); fill(200); textSize(12); textAlign(CENTER, CENTER);
+    noStroke(); fill(200); textSize(14); textAlign(CENTER, CENTER);
     text('ρ', 0, 0);
     pop();
 
     // X-axis label φ (deg)
-    noStroke(); fill(200); textSize(12); textAlign(CENTER, TOP);
+    noStroke(); fill(200); textSize(14); textAlign(CENTER, TOP);
     text('φ (deg)', (width + 40) / 2, linePlotH - 2);
 
 
@@ -439,10 +446,10 @@ function showScoreBanner () {
     /* ---- banner ---- */
     fill(255); textAlign(CENTER, CENTER);
 
-    textSize(24);
+    textSize(26);
     text(`Accuracy: ${acc}%`, ORIGIN_X, 80);
 
-    textSize(18);
+    textSize(20);
     text(acc >= 80 ? 'Great job 🎉' : 'Try again for better precision.',
         ORIGIN_X, 110);
 }
@@ -450,7 +457,7 @@ function showScoreBanner () {
 
 // Adjustments for Polar Grid alignment:
 function drawPolarGrid() {
-    let maxR = 200;
+    let maxR = 250;
     if (mode === MODE_EXERCISE) {
         const all = [...truePts, ...userPts].map(p => p.rho);
         if (all.length) maxR = max(maxR, max(...all));
@@ -487,7 +494,7 @@ function drawCartesianGrid() {
     stroke(30, 30, 60);
     strokeWeight(1);
     fill(100);
-    textSize(9);
+    textSize(12);
     textAlign(CENTER, CENTER);
 
     const spacing = 50;
@@ -510,22 +517,31 @@ function drawCartesianGrid() {
 
 
 function drawAngleArc(a){
-    noFill(); stroke(255,100,0); strokeWeight(3);
-    arc(ORIGIN_X,ORIGIN_Y,100,100,-a,0,OPEN);
-    stroke(255); strokeWeight(1); fill(255,100,0);
-    const mid=-a/2; textAlign(CENTER); textSize(14);
-    text(`φ=${degrees(a).toFixed(1)}°`,
-        ORIGIN_X+55*cos(mid), ORIGIN_Y+55*sin(mid));
+    const radius = 100;
+    const startA = -a;
+    const endA   = 0;
+
+    // Filled wedge with transparency
     noStroke();
+    fill(255, 100, 0, 40); // orange with opacity
+    arc(ORIGIN_X, ORIGIN_Y, radius * 2, radius * 2, startA, endA, PIE);
+
+    // Optional angle label
+    fill(255, 100, 0); noStroke(); textSize(14); textAlign(CENTER);
+    const mid = (startA + endA) / 2;
+    text(`φ=${degrees(a).toFixed(1)}°`,
+        ORIGIN_X + 55 * cos(mid),
+        ORIGIN_Y + 55 * sin(mid));
 }
+
 function drawContinueButton(){
     fill(continueMove?'lightgreen':'gray');
-    rect(width-150,20,120,30,10);
-    fill(0); textSize(14); textAlign(CENTER,CENTER);
-    text(continueMove?'Moving…':'Continue Move', width-90,35);
+    rect(width-150,30,120,30,10);
+    fill(0); textSize(16); textAlign(CENTER,CENTER);
+    text(continueMove?'Moving…':'Continue Move', width-90,45);
 }
 function fireworks(){
-    fill(255,255,0); textSize(32); textAlign(CENTER,CENTER);
+    fill(255,255,0); textSize(34); textAlign(CENTER,CENTER);
     text("Hooora!", ORIGIN_X, height-50);
     sparkle+=0.5;
     for(let i=0;i<30;i++){
