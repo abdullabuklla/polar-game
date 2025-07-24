@@ -62,16 +62,15 @@ let mobileUpActive = false,
 
 // at top of your sketch (after globals)
 function preventTouchSelection(el) {
-    el.style.userSelect        = 'none';
-    el.style.webkitUserSelect  = 'none';
-    el.style.msUserSelect      = 'none';
-    el.style.touchAction       = 'none';
-    // prevent default on touch to stop long‑press selection
-    el.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-    el.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+    el.style.userSelect       = 'none';
+    el.style.webkitUserSelect = 'none';
+    el.style.msUserSelect     = 'none';
+    el.style.touchAction      = 'none';
+    el.addEventListener('selectstart', e => e.preventDefault());
     el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('touchstart',   e => e.preventDefault(), { passive: false });
+    el.addEventListener('touchmove',    e => e.preventDefault(), { passive: false });
 }
-
 
 /*──────── setup ────────*/
 function setup () {
@@ -121,6 +120,15 @@ function setup () {
     // mobile buttons
     const btnUp   = createButton('⬆️').id('btnUp').parent(mobileControls);
     const btnDown = createButton('⬇️').id('btnDown').parent(mobileControls);
+
+    // ← insert this block immediately below:
+    [btnUp, btnDown].forEach(b => {
+        b.style('user-select', 'none')
+            .style('-webkit-user-select', 'none')
+            .style('-ms-user-select', 'none');
+        b.elt.addEventListener('selectstart', e => e.preventDefault());
+    });
+
 
     // display only on mobile
     if (isMobile) {
