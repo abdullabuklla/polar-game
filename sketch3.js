@@ -4,7 +4,7 @@
 // * Dynamic polar grid  ⟷  Classic 200-px grid (checkbox in header)
 // ---------------------------------------------------------------------------
 
-const CANVAS_W = 1000;
+const CANVAS_W = 950;
 const CANVAS_H = 800;
 const TWO_PI   = Math.PI * 2;
 
@@ -98,7 +98,7 @@ function setup () {
         .id('mobileControls')
         .parent('sketchContainer')
         .style('position','absolute')
-        .style('top', `${CANVAS_H + linePlotH + 200}px`)
+        .style('top', `${CANVAS_H + linePlotH + 300}px`)
         .style('left','50%')
         .style('transform','translateX(-50%)')
         .style('display','none')   // start hidden
@@ -110,10 +110,13 @@ function setup () {
     // mobile buttons
     const btnUp   = createButton('⬆️').id('btnUp').parent(mobileControls);
     const btnDown = createButton('⬇️').id('btnDown').parent(mobileControls);
-
     
     // display only on mobile
     if (isMobile) {
+        // only the buttons catch taps; the rest of that div is “invisible” to touch
+        mobileControls.elt.style.pointerEvents = 'none';
+        btnUp.elt.style.pointerEvents   = 'auto';
+        btnDown.elt.style.pointerEvents = 'auto';
         // push the canvas below the bar
         const headerBar = select('#headerBar').elt;
         const h = headerBar.getBoundingClientRect().height;
@@ -220,7 +223,7 @@ function draw () {
 
     if (isMobile && mode === MODE_EXERCISE) {
         if (mobileUpActive)   rho += rhoStep;
-        if (mobileDownActive) rho = max(0, rho - rhoStep);
+        if (mobileDownActive) rho =  rho - rhoStep;
     }
 }
 
