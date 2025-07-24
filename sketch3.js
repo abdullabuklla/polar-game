@@ -55,13 +55,31 @@ const ORIGIN_Y = CANVAS_H / 2 + 60;
 const UNIT_PX = 1; // 1 unit = 1 px (default)
 
 
+let mobileControls;
+let isMobile = /android|iphone|kindle|ipad/i.test(navigator.userAgent);
+let mobileUpActive = false,
+    mobileDownActive = false;
+
+
 
 /*──────── setup ────────*/
 function setup () {
-    createCanvas(CANVAS_W, CANVAS_H + linePlotH + 100);
+    // Div to wrap canvas + controls
+    const sketchContainer = createDiv()
+        .id('sketchContainer')
+        .style('position','absolute')
+        .style('width',  CANVAS_W + 'px')
+        .style('margin','0 auto');         // center on the page if you like
+
+
+    cnv = createCanvas(CANVAS_W, CANVAS_H + linePlotH + 100);
+    cnv.parent('sketchContainer');
 
     buildExerciseDrawer();
+
     buildHeaderBar();
+
+
     buildGotoControls();
 
     angleMode(RADIANS);
@@ -74,6 +92,51 @@ function setup () {
         ORIGIN_Y - r * sin(a)
     );
 
+
+    // buoild the mobile controls
+    mobileControls = createDiv()
+        .id('mobileControls')
+        .parent('sketchContainer')
+        .style('position','absolute')
+        .style('bottom', (linePlotH + 30) + 'px')
+        .style('left','50%')
+        .style('transform','translateX(-50%)')
+        .style('display','none')   // start hidden
+        .style('gap','550px')
+        .style('z-index','10')
+
+
+
+    // mobile buttons
+    const btnUp   = createButton('⬆️').id('btnUp').parent(mobileControls);
+    const btnDown = createButton('⬇️').id('btnDown').parent(mobileControls);
+
+    
+    // display only on mobile
+    if (isMobile) {
+        // push the canvas below the bar
+        const headerBar = select('#headerBar').elt;
+        const h = headerBar.getBoundingClientRect().height;
+        select('canvas').style('margin-top', `${h}px`);
+
+        // show only in Exercise Mode (mode‑switchers handle that)
+        btnUp.mousePressed  (() => mobileUpActive   = true);
+        btnUp.mouseReleased (() => mobileUpActive   = false);
+        btnUp.touchStarted  (() => mobileUpActive   = true);
+        btnUp.touchEnded    (() => mobileUpActive   = false);
+
+        btnDown.mousePressed  (() => mobileDownActive = true);
+        btnDown.mouseReleased (() => mobileDownActive = false);
+        btnDown.touchStarted  (() => mobileDownActive = true);
+        btnDown.touchEnded    (() => mobileDownActive = false);
+
+
+        // enlarge *all* buttons on mobile:
+        selectAll('button, input').forEach(b => {
+            b.style('font-size', '1.5em');
+            b.style('padding',   '0.3em');
+        });
+    }
 }
 
 /*════════ DRAW LOOP ════════*/
@@ -147,13 +210,20 @@ function draw () {
         if (exerciseDone) showScoreBanner();
     }
 
-    drawContinueButton();
+    if (mode===MODE_TARGET) {
+        drawContinueButton();
+    }
+
+    if (isMobile && mode === MODE_EXERCISE) {
+        if (mobileUpActive)   rho += rhoStep;
+        if (mobileDownActive) rho = max(0, rho - rhoStep);
+    }
 }
 
 /*════════ HEADER ════════*/
 function buildHeaderBar () {
-    const bar = createDiv()
-        .style('width', CANVAS_W+'px').style('height','30px')
+    const bar = createDiv().id('headerBar')
+        .style('width', CANVAS_W+'px').style('min-height','30px')
         .style('background','#444').style('display','flex')
         .style('align-items','center').style('gap','12px')
         .style('padding','20 20px').style('color','#fff')
@@ -185,6 +255,7 @@ function buildHeaderBar () {
 /*──────── enter / leave modes ────────*/
 function enterExerciseMode(btn){
     mode = MODE_EXERCISE;
+    if (isMobile) mobileControls.style('display','flex');
     gotoPanel.hide(); drawer.style('display','flex');
     originalChk.show();
     animateToTarget = false;
@@ -193,6 +264,7 @@ function enterExerciseMode(btn){
 }
 function enterTargetMode(btn){
     mode = MODE_TARGET;
+    mobileControls.style('display','none');
     drawer.style('display','none'); gotoPanel.show();
     exerciseOn=false; exerciseDone=false;
     originalChk.hide();
