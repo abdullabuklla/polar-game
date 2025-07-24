@@ -72,7 +72,7 @@ function setup () {
         .style('margin','0 auto');         // center on the page if you like
 
 
-    cnv = createCanvas(CANVAS_W, CANVAS_H + linePlotH + 100);
+    cnv = createCanvas(CANVAS_W, CANVAS_H + linePlotH + 70);
     cnv.parent('sketchContainer');
 
     buildExerciseDrawer();
