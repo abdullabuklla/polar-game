@@ -4,8 +4,8 @@
 // * Dynamic polar grid  ⟷  Classic 200-px grid (checkbox in header)
 // ---------------------------------------------------------------------------
 
-const CANVAS_W = 900;
-const CANVAS_H = 700;
+const CANVAS_W = 1000;
+const CANVAS_H = 800;
 const TWO_PI   = Math.PI * 2;
 
 let gridBottomY = 150;
@@ -98,7 +98,7 @@ function setup () {
         .id('mobileControls')
         .parent('sketchContainer')
         .style('position','absolute')
-        .style('bottom', (linePlotH + 30) + 'px')
+        .style('top', `${CANVAS_H + linePlotH + 200}px`)
         .style('left','50%')
         .style('transform','translateX(-50%)')
         .style('display','none')   // start hidden
@@ -136,6 +136,10 @@ function setup () {
             b.style('font-size', '1.5em');
             b.style('padding',   '0.3em');
         });
+
+        // only make the up/down arrows bigger
+        btnUp.style('font-size', '3em').style('padding', '0.5em');
+        btnDown.style('font-size', '3em').style('padding', '0.5em');
     }
 }
 
