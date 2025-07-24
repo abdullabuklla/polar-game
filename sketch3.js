@@ -4,7 +4,7 @@
 // * Dynamic polar grid  ⟷  Classic 200-px grid (checkbox in header)
 // ---------------------------------------------------------------------------
 
-const CANVAS_W = 950;
+const CANVAS_W = 900;
 const CANVAS_H = 800;
 const TWO_PI   = Math.PI * 2;
 
@@ -48,7 +48,7 @@ let targetFn = p => 100;
 let refPts = [];
 
 let truePts = [], userPts = [];
-const linePlotH = 150;
+const linePlotH = 200;
 
 const ORIGIN_X = CANVAS_W / 2;
 const ORIGIN_Y = CANVAS_H / 2 + 60;
@@ -110,7 +110,7 @@ function setup () {
     // mobile buttons
     const btnUp   = createButton('⬆️').id('btnUp').parent(mobileControls);
     const btnDown = createButton('⬇️').id('btnDown').parent(mobileControls);
-    
+
     // display only on mobile
     if (isMobile) {
         // only the buttons catch taps; the rest of that div is “invisible” to touch
@@ -139,6 +139,15 @@ function setup () {
             b.style('font-size', '1.5em');
             b.style('padding',   '0.3em');
         });
+
+        // Disable double-tap zoom and selection on mobile arrow buttons
+        [btnUp, btnDown].forEach(b => {
+            b.elt.style.userSelect = 'none';                  // prevent text selection
+            b.elt.style.touchAction = 'manipulation';         // disable double-tap zoom
+        });
+
+        btnUp.style('user-select', 'none').style('touch-action', 'manipulation');
+        btnDown.style('user-select', 'none').style('touch-action', 'manipulation');
 
         // only make the up/down arrows bigger
         btnUp.style('font-size', '3em').style('padding', '0.5em');
@@ -268,6 +277,7 @@ function enterExerciseMode(btn){
     animateToTarget = false;
     truePts=[]; userPts=[]; exerciseOn=false; exerciseDone=false;
     btn.html('Switch to Target Mode');
+    buildRef();
 }
 function enterTargetMode(btn){
     mode = MODE_TARGET;
@@ -334,11 +344,32 @@ function buildExerciseDrawer(){
     drawer.child(createSpan('    ρ step:'));
     rhoStepInput = createInput('3').size(50).parent(drawer);   // declare global below
 
+    exprInput   .input(buildRef);
+    phiFromInput.input(buildRef);
+    phiToInput  .input(buildRef);
+
     createButton('Start').parent(drawer).mousePressed(startExercise);
 
     createButton('Reset').parent(drawer).mousePressed(resetExercise);
 
 }
+
+// rebuild the gray refPts curve from the current inputs
+function buildRef() {
+    try {
+        const fn = new Function('phi', `
+      const {sin,cos,tan,asin,acos,atan,abs,PI,E,sqrt,pow,exp,log,max,min,floor,ceil}=Math;
+      return ${exprInput.value()};
+    `);
+        const from = radians(float(phiFromInput.value()));
+        const to   = radians(float(phiToInput.value()));
+        refPts = [];
+        for (let a = from; a <= to; a += sweepRadStep) {
+            refPts.push({ phi: a, rho: fn(a) });
+        }
+    } catch { /* ignore parse errors */ }
+}
+
 
 function startExercise(){
     try{
@@ -355,11 +386,8 @@ function startExercise(){
     phiTo  = radians(float(phiToInput.value()));
     sweepRadStep=radians(float(speedInput.value())||0.1);
 
-    /* -------- build reference curve once -------- */
-    refPts = [];
-    for (let a = phiFrom; a <= phiTo; a += sweepRadStep) {
-        refPts.push({ phi: a, rho: targetFn(a) });
-    }
+    /* -------- build reference curve once with helper -------- */
+    buildRef();
     /* -------------------------------------------- */
 
     phiCurr = phiFrom;
@@ -390,6 +418,7 @@ function resetExercise() {
     userPts = [];
     phiCurr = phiFrom;
     rho = targetFn(phiCurr);
+    buildRef();
 }
 
 
@@ -447,9 +476,30 @@ function drawLinePlot () {
     const minR = min(...vals), maxR = max(...vals);
     const useLog = maxR > 600;
 
+
+
     const ys = useLog
-        ? r => map(Math.log10(r - minR + 1), 0, Math.log10(maxR - minR + 1), linePlotH - 20, 10)
-        : r => map(r,                minR,  maxR,                             linePlotH - 20, 10);
+        ? r => {
+            // logarithmic scale, but guard against constant data
+            if (minR === maxR) {
+                return (linePlotH - 20 + 10) / 2;
+            }
+            return map(
+                Math.log10(r - minR + 1),
+                0,
+                Math.log10(maxR - minR + 1),
+                linePlotH - 20,
+                10
+            );
+        }
+        : r => {
+            // linear scale, but guard against constant data
+            if (minR === maxR) {
+                return (linePlotH - 20 + 10) / 2;
+            }
+            return map(r, minR, maxR, linePlotH - 20, 10);
+        };
+
 
     /* ─── Y-axis ticks & labels ─── */
     stroke(120); fill(180); textSize(12); textAlign(RIGHT, CENTER);
