@@ -60,6 +60,17 @@ let isMobile = /android|iphone|kindle|ipad/i.test(navigator.userAgent);
 let mobileUpActive = false,
     mobileDownActive = false;
 
+// at top of your sketch (after globals)
+function preventTouchSelection(el) {
+    el.style.userSelect        = 'none';
+    el.style.webkitUserSelect  = 'none';
+    el.style.msUserSelect      = 'none';
+    el.style.touchAction       = 'none';
+    // prevent default on touch to stop long‑press selection
+    el.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+    el.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+    el.addEventListener('contextmenu', e => e.preventDefault());
+}
 
 
 /*──────── setup ────────*/
@@ -146,12 +157,11 @@ function setup () {
             b.elt.style.touchAction = 'manipulation';         // disable double-tap zoom
         });
 
-        // ← prevent long‐press or drag from selecting the screen
-        sketchContainer.elt.style.userSelect        = 'none';
-        sketchContainer.elt.style.webkitUserSelect  = 'none';
-        select('canvas').elt.style.userSelect       = 'none';
-        select('canvas').elt.style.webkitUserSelect = 'none';
-        select('canvas').elt.style.touchAction      = 'none';
+        // disable any selection/zoom on the whole sketch area
+        preventTouchSelection(sketchContainer.elt);
+        preventTouchSelection(select('canvas').elt);
+        // also disable on the mobile controls wrapper
+        preventTouchSelection(mobileControls.elt);
 
         btnUp.style('user-select', 'none').style('touch-action', 'manipulation');
         btnDown.style('user-select', 'none').style('touch-action', 'manipulation');
