@@ -146,12 +146,21 @@ function setup () {
             b.elt.style.touchAction = 'manipulation';         // disable double-tap zoom
         });
 
+        // ← prevent long‐press or drag from selecting the screen
+        sketchContainer.elt.style.userSelect        = 'none';
+        sketchContainer.elt.style.webkitUserSelect  = 'none';
+        select('canvas').elt.style.userSelect       = 'none';
+        select('canvas').elt.style.webkitUserSelect = 'none';
+        select('canvas').elt.style.touchAction      = 'none';
+
         btnUp.style('user-select', 'none').style('touch-action', 'manipulation');
         btnDown.style('user-select', 'none').style('touch-action', 'manipulation');
 
         // only make the up/down arrows bigger
         btnUp.style('font-size', '3em').style('padding', '0.5em');
         btnDown.style('font-size', '3em').style('padding', '0.5em');
+
+
     }
 }
 
